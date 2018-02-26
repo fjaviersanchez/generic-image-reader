@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, absolute_import, division, print_function
-from astropy.io import fits, ascii
+#from astropy.io import fits, ascii
+import fitsio as fits
 import numpy as np
 import warnings
 
@@ -11,7 +12,7 @@ class BaseImageReader(object):
 
     def __init__(self,filename,**kwargs):
         self._init_kwargs = kwargs.copy()
-        hdu_list = fits.open(filename)
+        hdu_list = fits.FITS(filename)
         #for now i assume the images are supposed to have 1 fits extension
         #this is the case for the images i've looked at
         num_hdu = len(hdu_list)
@@ -22,7 +23,7 @@ class BaseImageReader(object):
 
         #this is an astropy header, which I'm anticipating is more than
         #users may want. But we will provide it and also give useful shortcuts
-        self.header_astropy = hdu_list[0].header
+        self.header_astropy = hdu_list[0].read_header()
         self.cards = list(self.header_astropy.keys())
         header_vals = [self.header_astropy[c] for c in self.cards]
         self.header_dict = dict(zip(self.cards,header_vals))
@@ -30,7 +31,7 @@ class BaseImageReader(object):
         #second add attributes dealing with the image data
 
         #is it memory efficent to keep image data as an attribute?
-        self.im_data = hdu_list[0].data
+        self.im_data = hdu_list[0].read()
         self.dimensions = self.im_data.shape[::-1]
         self.width = self.dimensions[1]
         self.height = self.dimensions[0]
